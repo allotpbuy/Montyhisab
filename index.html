@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MONTY - COIN HISAB</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+        }
+        body {
+            background: #f0f2f5;
+            padding: 16px;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+        }
+        h1 {
+            color: #1e3a6b;
+            border-bottom: 3px solid #1e3a6b;
+            padding-bottom: 12px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 24px;
+            flex-wrap: wrap;
+        }
+        h1 small {
+            font-size: 14px;
+            font-weight: normal;
+            color: #555;
+        }
+        .stats {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+        .stat-box {
+            flex: 1;
+            min-width: 100px;
+            padding: 12px;
+            border-radius: 12px;
+            text-align: center;
+            font-weight: bold;
+            color: white;
+        }
+        .stat-box.total {
+            background: linear-gradient(135deg, #1e3a6b, #2a5298);
+        }
+        .stat-box.ten {
+            background: linear-gradient(135deg, #e67e22, #f39c12);
+        }
+        .stat-box.five {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+        }
+        .stat-box .number {
+            font-size: 22px;
+        }
+        .stat-box .label {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+        .input-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+        .input-group input, .input-group select {
+            padding: 12px 16px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 16px;
+            outline: none;
+            flex: 1;
+            min-width: 120px;
+        }
+        .input-group input:focus, .input-group select:focus {
+            border-color: #1e3a6b;
+        }
+        .btn {
+            padding: 12px 22px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .btn-primary {
+            background: #1e3a6b;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #153050;
+        }
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        .btn-success:hover {
+            background: #1e7e34;
+        }
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+        .btn-danger:hover {
+            background: #b02a37;
+        }
+        .btn-warning {
+            background: #ffc107;
+            color: #000;
+        }
+        .btn-warning:hover {
+            background: #e0a800;
+        }
+        .btn-outline {
+            background: transparent;
+            border: 2px solid #1e3a6b;
+            color: #1e3a6b;
+        }
+        .btn-outline:hover {
+            background: #1e3a6b;
+            color: white;
+        }
+        .btn-ten {
+            background: #e67e22;
+            color: white;
+        }
+        .btn-ten:hover {
+            background: #d35400;
+        }
+        .btn-five {
+            background: #27ae60;
+            color: white;
+        }
+        .btn-five:hover {
+            background: #1e8449;
+        }
+        .search-box {
+            margin-bottom: 16px;
+        }
+        .search-box input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 16px;
+            outline: none;
+        }
+        .search-box input:focus {
+            border-color: #1e3a6b;
+        }
+        .customer-list {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+        .customer-card {
+            background: #f8f9fc;
+            border-radius: 14px;
+            padding: 16px;
+            border-left: 6px solid #1e3a6b;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        .customer-card.type-10 {
+            border-left-color: #e67e22;
+        }
+        .customer-card.type-5 {
+            border-left-color: #27ae60;
+        }
+        .customer-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .customer-name {
+            font-size: 18px;
+            font-weight: bold;
+            color: #1e3a6b;
+        }
+        .customer-badge {
+            font-size: 11px;
+            padding: 3px 10px;
+            border-radius: 20px;
+            color: white;
+            font-weight: bold;
+        }
+        .badge-10 {
+            background: #e67e22;
+        }
+        .badge-5 {
+            background: #27ae60;
+        }
+        .customer-balance {
+            font-size: 20px;
+            font-weight: bold;
+        }
+        .balance-positive {
+            color: #28a745;
+        }
+        .balance-negative {
+            color: #dc3545;
+        }
+        .customer-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 12px;
+        }
+        .customer-actions input {
+            width: 80px;
+            padding: 8px 10px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 15px;
+            outline: none;
+        }
+        .customer-actions input:focus {
+            border-color: #1e3a6b;
+        }
+        .history {
+            margin-top: 12px;
+            font-size: 13px;
+            color: #555;
+            max-height: 100px;
+            overflow-y: auto;
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #eee;
+        }
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            border-bottom: 1px dashed #eee;
+        }
+        .history-item .coins-plus {
+            color: #28a745;
+            font-weight: bold;
+        }
+        .history-item .coins-minus {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        .backup-section {
+            margin-top: 25px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            padding-top: 20px;
+            border-top: 2px solid #eee;
+        }
+        .btn-sm {
+            padding: 8px 16px;
+            font-size: 14px;
+        }
+        .status-bar {
+            margin-top: 12px;
+            font-size: 13px;
+            color: #28a745;
+            text-align: center;
+            background: #e8f5e9;
+            padding: 8px;
+            border-radius: 8px;
+            display: none;
+        }
+        .filter-buttons {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+        .filter-buttons .btn {
+            flex: 1;
+            min-width: 60px;
+            text-align: center;
+        }
+        /* Multi-select delete */
+        .delete-selected-area {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-top: 10px;
+            padding: 10px;
+            background: #fff5f5;
+            border-radius: 10px;
+            border: 1px solid #f5c6cb;
+        }
+        .delete-selected-area .btn {
+            flex: 1;
+        }
+        .delete-checkbox {
+            margin-right: 8px;
+            transform: scale(1.2);
+        }
+        @media (max-width: 600px) {
+            .container {
+                padding: 14px;
+            }
+            .customer-actions input {
+                width: 65px;
+            }
+            .btn {
+                padding: 10px 14px;
+                font-size: 14px;
+            }
+            .stats {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>
+        🪙 MONTY - COIN HISAB
+        <small>v5.0</small>
+    </h1>
+
+    <!-- Stats -->
+    <div class="stats">
+        <div class="stat-box total">
+            <div class="number" id="totalCoinsDisplay">0</div>
+            <div class="label">💰 कुल कोइन</div>
+        </div>
+        <div class="stat-box ten">
+            <div class="number" id="total10Display">0</div>
+            <div class="label">🟧 10% वाले (कुल)</div>
+        </div>
+        <div class="stat-box five">
+            <div class="number" id="total5Display">0</div>
+            <div class="label">🟩 5% वाले (कुल)</div>
+        </div>
+    </div>
+
+    <!-- Add Customer -->
+    <div class="input-group">
+        <input type="text" id="customerNameInput" placeholder="नया कस्टमर का नाम..." />
+        <select id="customerTypeSelect">
+            <option value="10">10% वाला</option>
+            <option value="5">5% वाला</option>
+        </select>
+        <button class="btn btn-primary" onclick="addCustomer()">➕ जोड़ें</button>
+    </div>
+
+    <!-- Filter -->
+    <div class="filter-buttons">
+        <button class="btn btn-outline btn-sm" onclick="setFilter('all')" id="filterAll">📋 सभी</button>
+        <button class="btn btn-ten btn-sm" onclick="setFilter('10')" id="filter10">🟧 10%</button>
+        <button class="btn btn-five btn-sm" onclick="setFilter('5')" id="filter5">🟩 5%</button>
+    </div>
+
+    <!-- Search -->
+    <div class="search-box">
+        <input type="text" id="searchInput" placeholder="🔍 कस्टमर खोजें..." oninput="renderCustomers()" />
+    </div>
+
+    <!-- Multi-delete area -->
+    <div class="delete-selected-area" id="deleteSelectedArea" style="display:none;">
+        <span style="font-weight:bold; color:#b02a37;">चयनित कस्टमर हटाएँ:</span>
+        <button class="btn btn-danger btn-sm" onclick="deleteSelectedCustomers()">🗑️ चयनित हटाएँ</button>
+        <button class="btn btn-outline btn-sm" onclick="clearSelections()">❌ चयन हटाएँ</button>
+    </div>
+
+    <!-- Customer List -->
+    <div class="customer-list" id="customerList"></div>
+
+    <!-- Status -->
+    <div class="status-bar" id="statusBar">✅ Data auto-saved!</div>
+
+    <!-- Backup / Restore -->
+    <div class="backup-section">
+        <button class="btn btn-success btn-sm" onclick="exportBackup()">📥 Backup Download</button>
+        <button class="btn btn-warning btn-sm" onclick="document.getElementById('restoreInput').click()">📤 Restore Backup</button>
+        <input type="file" id="restoreInput" accept=".json" style="display:none" onchange="importBackup(event)" />
+        <button class="btn btn-danger btn-sm" onclick="if(confirm('सारा डेटा डिलीट हो जाएगा। क्या आप sure हैं?')) { localStorage.clear(); renderCustomers(); showStatus('🗑️ सारा डेटा हटा दिया गया', 'red'); }">🗑️ सारा डेटा हटाएँ</button>
+    </div>
+</div>
+
+<script>
+    // ---------- STATE ----------
+    let currentFilter = 'all';
+    let selectedIndices = new Set(); // track which customers are selected for bulk delete
+
+    // ---------- DATA ----------
+    function getCustomers() {
+        try {
+            const data = localStorage.getItem('customers');
+            if (data) {
+                return JSON.parse(data);
+            }
+        } catch (e) {
+            console.error('Error loading data:', e);
+        }
+        return [];
+    }
+
+    function saveCustomers(customers) {
+        localStorage.setItem('customers', JSON.stringify(customers));
+        updateStats(customers);
+        showStatus('✅ Data auto-saved!', '#28a745');
+        // Clear selections after save
+        selectedIndices.clear();
+        updateDeleteAreaVisibility();
+    }
+
+    // ---------- SHOW STATUS ----------
+    function showStatus(msg, color = '#28a745') {
+        const bar = document.getElementById('statusBar');
+        bar.textContent = msg;
+        bar.style.display = 'block';
+        bar.style.background = color === '#28a745' ? '#e8f5e9' : '#ffebee';
+        bar.style.color = color;
+        setTimeout(() => {
+            bar.style.display = 'none';
+        }, 3000);
+    }
+
+    // ---------- UPDATE STATS ----------
+    function updateStats(customers) {
+        const total = customers.reduce((sum, c) => sum + (c.balance || 0), 0);
+        const total10 = customers.filter(c => c.type === '10').reduce((sum, c) => sum + (c.balance || 0), 0);
+        const total5 = customers.filter(c => c.type === '5').reduce((sum, c) => sum + (c.balance || 0), 0);
+
+        document.getElementById('totalCoinsDisplay').textContent = total;
+        document.getElementById('total10Display').textContent = total10;
+        document.getElementById('total5Display').textContent = total5;
+    }
+
+    // ---------- SET FILTER ----------
+    function setFilter(type) {
+        currentFilter = type;
+        document.querySelectorAll('.filter-buttons .btn').forEach(b => b.style.opacity = '0.6');
+        if (type === 'all') document.getElementById('filterAll').style.opacity = '1';
+        else if (type === '10') document.getElementById('filter10').style.opacity = '1';
+        else if (type === '5') document.getElementById('filter5').style.opacity = '1';
+        renderCustomers();
+    }
+
+    // ---------- MULTI-DELETE UI ----------
+    function updateDeleteAreaVisibility() {
+        const area = document.getElementById('deleteSelectedArea');
+        if (selectedIndices.size > 0) {
+            area.style.display = 'flex';
+        } else {
+            area.style.display = 'none';
+        }
+    }
+
+    function toggleSelection(idx) {
+        if (selectedIndices.has(idx)) {
+            selectedIndices.delete(idx);
+        } else {
+            selectedIndices.add(idx);
+        }
+        updateDeleteAreaVisibility();
+        renderCustomers(); // re-render to update checkbox states
+    }
+
+    function clearSelections() {
+        selectedIndices.clear();
+        updateDeleteAreaVisibility();
+        renderCustomers();
+    }
+
+    function deleteSelectedCustomers() {
+        const customers = getCustomers();
+        if (selectedIndices.size === 0) return;
+        const count = selectedIndices.size;
+        if (!confirm(`क्या आप ${count} चयनित कस्टमर को हटाना चाहते हैं?`)) return;
+        
+        // Sort indices descending so we can splice safely
+        const sorted = Array.from(selectedIndices).sort((a, b) => b - a);
+        for (let idx of sorted) {
+            customers.splice(idx, 1);
+        }
+        selectedIndices.clear();
+        saveCustomers(customers);
+        renderCustomers();
+        showStatus(`🗑️ ${count} कस्टमर हटा दिए गए`, '#dc3545');
+    }
+
+    // ---------- RENDER ----------
+    function renderCustomers() {
+        const customers = getCustomers();
+        const search = document.getElementById('searchInput').value.toLowerCase().trim();
+        const list = document.getElementById('customerList');
+
+        let filtered = customers;
+        if (currentFilter !== 'all') {
+            filtered = filtered.filter(c => c.type === currentFilter);
+        }
+        if (search) {
+            filtered = filtered.filter(c => c.name.toLowerCase().includes(search));
+        }
+
+        if (filtered.length === 0) {
+            list.innerHTML = '<p style="color:#888; text-align:center; padding:30px;">कोई कस्टमर नहीं मिला या अभी कोई नहीं है।</p>';
+            updateStats(customers);
+            return;
+        }
+
+        let html = '';
+        filtered.forEach((c, idx) => {
+            const realIdx = customers.indexOf(c);
+            const balance = c.balance || 0;
+            const balanceClass = balance >= 0 ? 'balance-positive' : 'balance-negative';
+            const sign = balance >= 0 ? '+' : '';
+            const typeClass = c.type === '10' ? 'type-10' : 'type-5';
+            const badgeClass = c.type === '10' ? 'badge-10' : 'badge-5';
+            const typeLabel = c.type === '10' ? '🟧 10%' : '🟩 5%';
+            const isChecked = selectedIndices.has(realIdx) ? 'checked' : '';
+
+            html += `
+                <div class="customer-card ${typeClass}" id="card_${realIdx}">
+                    <div class="customer-header">
+                        <span class="customer-name">
+                            <input type="checkbox" class="delete-checkbox" ${isChecked} onchange="toggleSelection(${realIdx})" />
+                            ${c.name} <span class="customer-badge ${badgeClass}">${typeLabel}</span>
+                        </span>
+                        <span class="customer-balance ${balanceClass}">${sign}${balance} कोइन</span>
+                    </div>
+
+                    <div class="customer-actions">
+                        <input type="number" id="coinInput_${realIdx}" placeholder="कोइन" min="1" />
+                        <button class="btn btn-success btn-sm" onclick="addCoin(${realIdx})">➕ +</button>
+                        <button class="btn btn-danger btn-sm" onclick="subtractCoin(${realIdx})">➖ -</button>
+                        <button class="btn btn-warning btn-sm" onclick="editCustomer(${realIdx})">✏️ Edit</button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteCustomer(${realIdx})">🗑️</button>
+                    </div>
+
+                    <div class="history">
+                        ${c.history && c.history.length > 0 ? c.history.slice().reverse().map(h => `
+                            <div class="history-item">
+                                <span>${h.date || ''}</span>
+                                <span class="${h.type === 'plus' ? 'coins-plus' : 'coins-minus'}">
+                                    ${h.type === 'plus' ? '+' : '-'} ${h.amount} कोइन
+                                </span>
+                            </div>
+                        `).join('') : '<span style="color:#aaa;">अभी कोई history नहीं</span>'}
+                    </div>
+                </div>
+            `;
+        });
+
+        list.innerHTML = html;
+        updateStats(customers);
+        updateDeleteAreaVisibility();
+    }
+
+    // ---------- ADD CUSTOMER ----------
+    function addCustomer() {
+        const input = document.getElementById('customerNameInput');
+        const name = input.value.trim();
+        if (!name) {
+            alert('कृपया नाम डालें!');
+            return;
+        }
+
+        const type = document.getElementById('customerTypeSelect').value;
+        const customers = getCustomers();
+        if (customers.some(c => c.name.toLowerCase() === name.toLowerCase())) {
+            alert('यह कस्टमर पहले से मौजूद है!');
+            return;
+        }
+
+        customers.push({
+            name: name,
+            type: type,
+            balance: 0,
+            history: []
+        });
+
+        saveCustomers(customers);
+        input.value = '';
+        renderCustomers();
+        showStatus(`✅ नया कस्टमर जुड़ा: ${name} (${type}%)`);
+    }
+
+    // ---------- EDIT CUSTOMER ----------
+    function editCustomer(idx) {
+        const customers = getCustomers();
+        const c = customers[idx];
+        const newName = prompt('कस्टमर का नाम बदलें:', c.name);
+        if (newName === null) return; // cancel
+        const trimmed = newName.trim();
+        if (!trimmed) {
+            alert('नाम खाली नहीं हो सकता!');
+            return;
+        }
+        // Check duplicate name (except self)
+        if (customers.some((other, i) => i !== idx && other.name.toLowerCase() === trimmed.toLowerCase())) {
+            alert('यह नाम पहले से मौजूद है!');
+            return;
+        }
+        const newType = confirm('क्या आप टाइप बदलना चाहते हैं? (OK = 10%, Cancel = 5%)') ? '10' : '5';
+        c.name = trimmed;
+        c.type = newType;
+        saveCustomers(customers);
+        renderCustomers();
+        showStatus(`✏️ ${trimmed} का डेटा अपडेट किया (${newType}%)`, '#ffc107');
+    }
+
+    // ---------- ADD COIN ----------
+    function addCoin(idx) {
+        const customers = getCustomers();
+        const input = document.getElementById(`coinInput_${idx}`);
+        if (!input) return;
+        const amount = parseInt(input.value);
+        if (!amount || amount <= 0) {
+            alert('सही संख्या डालें (1 से ज्यादा)');
+            return;
+        }
+
+        // Ask for type: 10% or 5% when adding coins
+        const typeChoice = confirm(`💰 क्या यह 10% वाला कोइन है? (OK = 10%, Cancel = 5%)`);
+        const coinType = typeChoice ? '10' : '5';
+
+        customers[idx].balance = (customers[idx].balance || 0) + amount;
+        customers[idx].history.push({
+            type: 'plus',
+            amount: amount,
+            date: new Date().toLocaleString(),
+            coinType: coinType
+        });
+
+        saveCustomers(customers);
+        input.value = '';
+        renderCustomers();
+        showStatus(`✅ +${amount} कोइन (${coinType}%) ${customers[idx].name} से मिले`);
+    }
+
+    // ---------- SUBTRACT COIN ----------
+    function subtractCoin(idx) {
+        const customers = getCustomers();
+        const input = document.getElementById(`coinInput_${idx}`);
+        if (!input) return;
+        const amount = parseInt(input.value);
+        if (!amount || amount <= 0) {
+            alert('सही संख्या डालें (1 से ज्यादा)');
+            return;
+        }
+
+        // Ask for type: 10% or 5% when subtracting
+        const typeChoice = confirm(`💸 क्या यह 10% वाला कोइन है? (OK = 10%, Cancel = 5%)`);
+        const coinType = typeChoice ? '10' : '5';
+
+        customers[idx].balance = (customers[idx].balance || 0) - amount;
+        customers[idx].history.push({
+            type: 'minus',
+            amount: amount,
+            date: new Date().toLocaleString(),
+            coinType: coinType
+        });
+
+        saveCustomers(customers);
+        input.value = '';
+        renderCustomers();
+        showStatus(`✅ -${amount} कोइन (${coinType}%) ${customers[idx].name} को दिए`);
+    }
+
+    // ---------- DELETE CUSTOMER (single) ----------
+    function deleteCustomer(idx) {
+        if (!confirm('क्या आप इस कस्टमर को हटाना चाहते हैं?')) return;
+        const customers = getCustomers();
+        const name = customers[idx].name;
+        customers.splice(idx, 1);
+        // Remove from selected set if present
+        selectedIndices.delete(idx);
+        // Shift indices in selected set
+        const newSet = new Set();
+        for (let s of selectedIndices) {
+            if (s > idx) newSet.add(s - 1);
+            else if (s < idx) newSet.add(s);
+        }
+        selectedIndices = newSet;
+        saveCustomers(customers);
+        renderCustomers();
+        showStatus(`🗑️ ${name} हटा दिया गया`, '#dc3545');
+    }
+
+    // ---------- EXPORT BACKUP ----------
+    function exportBackup() {
+        const data = getCustomers();
+        if (data.length === 0) {
+            alert('कोई डेटा नहीं है!');
+            return;
+        }
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `monty_backup_${new Date().toISOString().slice(0,10)}.json`;
+        a.click();
+        URL.revokeObjectURL(a.href);
+        showStatus('✅ Backup download हो गया!');
+    }
+
+    // ---------- IMPORT BACKUP ----------
+    function importBackup(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const data = JSON.parse(e.target.result);
+                if (!Array.isArray(data)) throw new Error('Invalid format');
+                if (!confirm(`क्या आप ${data.length} कस्टमरों को restore करना चाहते हैं? पुराना डेटा overwrite हो जाएगा।`)) return;
+                saveCustomers(data);
+                renderCustomers();
+                showStatus(`✅ ${data.length} कस्टमर restore हो गए!`);
+            } catch (err) {
+                alert('❌ यह सही backup file नहीं है।');
+            }
+        };
+        reader.readAsText(file);
+        event.target.value = '';
+    }
+
+    // ---------- AUTO SAVE ----------
+    setInterval(() => {
+        const customers = getCustomers();
+        saveCustomers(customers);
+    }, 5000);
+
+    // ---------- INIT ----------
+    setFilter('all');
+    renderCustomers();
+    showStatus('✅ App ready! Data safe hai.', '#28a745');
+</script>
+
+</body>
+</html>
