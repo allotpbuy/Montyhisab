@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>MONTY - TEST</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <h1>🔌 Supabase Connection Test</h1>
+    
+    <button onclick="testConnection()" style="padding:10px 20px;font-size:16px;cursor:pointer;">
+        🧪 Test Connection
+    </button>
+    
+    <button onclick="loadData()" style="padding:10px 20px;font-size:16px;cursor:pointer;">
+        📋 Load Data
+    </button>
+    
+    <div id="result" style="margin-top:20px;padding:15px;background:#f5f5f5;border-radius:8px;font-family:monospace;white-space:pre-wrap;word-wrap:break-word;min-height:100px;">
+        Click a button to start...
+    </div>
+
+    <script>
+        // ========== SUPABASE ==========
+        const SUPABASE_URL = 'https://rpyymyiwjxnztzxqef.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJweW15bWl3ZWpueHR6eHFlZnZnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg1OTI3NzYsImV4cCI6MjEwNDE2ODc3Nn0.g5dDTzf-A-DJEVxwua9giVlPbIyqdhHENRrM-f04pdk';
+
+        console.log('🔗 URL:', SUPABASE_URL);
+        console.log('🔑 Key:', SUPABASE_KEY);
+
+        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // ========== TEST CONNECTION ==========
+        async function testConnection() {
+            const result = document.getElementById('result');
+            result.innerHTML = '⏳ Testing connection...';
+            
+            try {
+                // Simple ping to check if Supabase is reachable
+                const { data, error } = await supabase
+                    .from('customers')
+                    .select('count', { count: 'exact', head: true });
+                
+                if (error) {
+                    result.innerHTML = '❌ Connection Error:\n' + JSON.stringify(error, null, 2);
+                    return;
+                }
+                
+                result.innerHTML = '✅ Connection Successful!\n\n' + 
+                                  'Status: Connected to Supabase\n' +
+                                  'Project: ' + SUPABASE_URL + '\n' +
+                                  'Data: ' + JSON.stringify(data, null, 2);
+            } catch (error) {
+                result.innerHTML = '❌ Error:\n' + JSON.stringify(error, null, 2);
+            }
+        }
+
+        // ========== LOAD DATA ==========
+        async function loadData() {
+            const result = document.getElementById('result');
+            result.innerHTML = '⏳ Loading data...';
+            
+            try {
+                const { data, error } = await supabase
+                    .from('customers')
+                    .select('*')
+                    .order('created_at', { ascending: true });
+                
+                if (error) {
+                    result.innerHTML = '❌ Error loading data:\n' + JSON.stringify(error, null, 2);
+                    return;
+                }
+                
+                if (data.length === 0) {
+                    result.innerHTML = '📭 No customers found in database.';
+                    return;
+                }
+                
+                let html = '✅ Data Loaded Successfully!\n\n';
+                html += '📊 Total Customers: ' + data.length + '\n\n';
+                html += '📋 Customer List:\n';
+                html += '─'.repeat(40) + '\n';
+                
+                data.forEach((c, i) => {
+                    html += `${i+1}. ${c.name} (${c.type}%) - ₹${c.balance || 0}\n`;
+                    html += `   ID: ${c.id}\n`;
+                    if (c.created_at) {
+                        html += `   Added: ${new Date(c.created_at).toLocaleString()}\n`;
+                    }
+                    html += '─'.repeat(40) + '\n';
+                });
+                
+                result.innerHTML = html;
+            } catch (error) {
+                result.innerHTML = '❌ Error:\n' + JSON.stringify(error, null, 2);
+            }
+        }
+
+        // Auto run on load
+        window.onload = function() {
+            document.getElementById('result').innerHTML = '✅ App Loaded!\n\nClick "Test Connection" first to check if Supabase is working.';
+        };
+    </script>
+</body>
+</html>
