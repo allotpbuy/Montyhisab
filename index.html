@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>MONTY</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body style="font-family:Arial;padding:20px;max-width:500px;margin:auto;">
+    <h1>💵 MONTY</h1>
+    
+    <div style="display:flex;gap:10px;margin:10px 0;">
+        <input type="text" id="name" placeholder="नाम" style="flex:1;padding:10px;border:2px solid #ddd;border-radius:8px;" />
+        <button onclick="add()" style="padding:10px 20px;background:#1e3a6b;color:white;border:none;border-radius:8px;">Add</button>
+        <button onclick="load()" style="padding:10px 20px;background:#28a745;color:white;border:none;border-radius:8px;">Load</button>
+    </div>
+
+    <div id="list" style="margin:10px 0;padding:10px;background:#f5f5f5;border-radius:8px;min-height:100px;">
+        Click Load
+    </div>
+
+    <div id="status" style="padding:10px;border-radius:8px;background:#e8f5e9;"></div>
+
+    <script>
+        const supabase = supabase.createClient(
+            'https://rpyymyiwjxnztzxqef.supabase.co',
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJweW15bWl3ZWpueHR6eHFlZnZnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg1OTI3NzYsImV4cCI6MjEwNDE2ODc3Nn0.g5dDTzf-A-DJEVxwua9giVlPbIyqdhHENRrM-f04pdk'
+        );
+
+        console.log('🔗 URL:', 'https://rpyymyiwjxnztzxqef.supabase.co');
+        console.log('🔑 Key:', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...');
+
+        async function load() {
+            try {
+                document.getElementById('list').innerHTML = 'Loading...';
+                document.getElementById('status').innerHTML = '⏳ Loading...';
+                
+                console.log('📡 Fetching data...');
+                const { data, error } = await supabase.from('customers').select('*');
+                
+                console.log('📦 Data:', data);
+                console.log('⚠️ Error:', error);
+                
+                if (error) {
+                    document.getElementById('list').innerHTML = '❌ Error: ' + error.message;
+                    document.getElementById('status').innerHTML = '❌ Error: ' + error.message;
+                    alert('❌ Error: ' + error.message);
+                    return;
+                }
+                
+                if (data.length === 0) {
+                    document.getElementById('list').innerHTML = 'No customers yet';
+                    document.getElementById('status').innerHTML = '✅ 0 customers';
+                    return;
+                }
+                
+                let html = '';
+                data.forEach(c => {
+                    html += `<div style="border-bottom:1px solid #ddd;padding:6px 0;">${c.name} - ₹${c.balance || 0}</div>`;
+                });
+                document.getElementById('list').innerHTML = html;
+                document.getElementById('status').innerHTML = '✅ ' + data.length + ' customers';
+            } catch (error) {
+                document.getElementById('list').innerHTML = '❌ ' + error.message;
+                document.getElementById('status').innerHTML = '❌ ' + error.message;
+                alert('❌ Error: ' + error.message);
+            }
+        }
+
+        async function add() {
+            const name = document.getElementById('name').value.trim();
+            if (!name) { alert('Name dalo!'); return; }
+            
+            try {
+                document.getElementById('status').innerHTML = '⏳ Adding...';
+                console.log('➕ Adding:', name);
+                
+                const { data, error } = await supabase
+                    .from('customers')
+                    .insert([{ name: name, type: '10', balance: 0, history: [] }])
+                    .select();
+                    
+                console.log('📦 Insert result:', data);
+                console.log('⚠️ Insert error:', error);
+                    
+                if (error) {
+                    document.getElementById('status').innerHTML = '❌ ' + error.message;
+                    alert('❌ Error: ' + error.message);
+                    return;
+                }
+                document.getElementById('status').innerHTML = '✅ Added: ' + name;
+                document.getElementById('name').value = '';
+                load();
+            } catch (error) {
+                document.getElementById('status').innerHTML = '❌ ' + error.message;
+                alert('❌ Error: ' + error.message);
+            }
+        }
+
+        // Auto load on start
+        load();
+    </script>
+</body>
+</html>
