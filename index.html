@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MONTY - RS HISAB</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+        }
+        body {
+            background: #f0f2f5;
+            padding: 16px;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+        }
+        h1 {
+            color: #1e3a6b;
+            border-bottom: 3px solid #1e3a6b;
+            padding-bottom: 12px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 24px;
+            flex-wrap: wrap;
+        }
+        h1 small {
+            font-size: 14px;
+            font-weight: normal;
+            color: #555;
+        }
+        .stats {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+        .stat-box {
+            flex: 1;
+            min-width: 120px;
+            padding: 12px;
+            border-radius: 12px;
+            text-align: center;
+            font-weight: bold;
+            color: white;
+        }
+        .stat-box.total {
+            background: linear-gradient(135deg, #1e3a6b, #2a5298);
+        }
+        .stat-box.ten {
+            background: linear-gradient(135deg, #e67e22, #f39c12);
+        }
+        .stat-box.five {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+        }
+        .stat-box .number {
+            font-size: 22px;
+        }
+        .stat-box .label {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+        .input-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+        .input-group input, .input-group select {
+            padding: 12px 16px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 16px;
+            outline: none;
+            flex: 1;
+            min-width: 120px;
+        }
+        .input-group input:focus, .input-group select:focus {
+            border-color: #1e3a6b;
+        }
+        .btn {
+            padding: 12px 22px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .btn-primary {
+            background: #1e3a6b;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #153050;
+        }
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        .btn-success:hover {
+            background: #1e7e34;
+        }
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+        .btn-danger:hover {
+            background: #b02a37;
+        }
+        .btn-warning {
+            background: #ffc107;
+            color: #000;
+        }
+        .btn-warning:hover {
+            background: #e0a800;
+        }
+        .btn-outline {
+            background: transparent;
+            border: 2px solid #1e3a6b;
+            color: #1e3a6b;
+        }
+        .btn-outline:hover {
+            background: #1e3a6b;
+            color: white;
+        }
+        .btn-ten {
+            background: #e67e22;
+            color: white;
+        }
+        .btn-ten:hover {
+            background: #d35400;
+        }
+        .btn-five {
+            background: #27ae60;
+            color: white;
+        }
+        .btn-five:hover {
+            background: #1e8449;
+        }
+        .btn-pay {
+            background: #8e44ad;
+            color: white;
+        }
+        .btn-pay:hover {
+            background: #7d3c98;
+        }
+        .search-box {
+            margin-bottom: 16px;
+        }
+        .search-box input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 16px;
+            outline: none;
+        }
+        .search-box input:focus {
+            border-color: #1e3a6b;
+        }
+        .customer-list {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+        .customer-card {
+            background: #f8f9fc;
+            border-radius: 14px;
+            padding: 16px;
+            border-left: 6px solid #1e3a6b;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        .customer-card.type-10 {
+            border-left-color: #e67e22;
+        }
+        .customer-card.type-5 {
+            border-left-color: #27ae60;
+        }
+        .customer-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .customer-name {
+            font-size: 18px;
+            font-weight: bold;
+            color: #1e3a6b;
+        }
+        .customer-badge {
+            font-size: 11px;
+            padding: 3px 10px;
+            border-radius: 20px;
+            color: white;
+            font-weight: bold;
+        }
+        .badge-10 {
+            background: #e67e22;
+        }
+        .badge-5 {
+            background: #27ae60;
+        }
+        .customer-balance {
+            font-size: 22px;
+            font-weight: bold;
+        }
+        .balance-positive {
+            color: #28a745;
+        }
+        .balance-negative {
+            color: #dc3545;
+        }
+        .balance-zero {
+            color: #888;
+        }
+        .customer-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 12px;
+        }
+        .customer-actions input {
+            width: 100px;
+            padding: 8px 10px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 15px;
+            outline: none;
+        }
+        .customer-actions input:focus {
+            border-color: #1e3a6b;
+        }
+        .history {
+            margin-top: 12px;
+            font-size: 13px;
+            color: #555;
+            max-height: 120px;
+            overflow-y: auto;
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #eee;
+        }
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            border-bottom: 1px dashed #eee;
+        }
+        .history-item .rs-plus {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        .history-item .rs-minus {
+            color: #28a745;
+            font-weight: bold;
+        }
+        .backup-section {
+            margin-top: 25px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            padding-top: 20px;
+            border-top: 2px solid #eee;
+        }
+        .btn-sm {
+            padding: 8px 16px;
+            font-size: 14px;
+        }
+        .status-bar {
+            margin-top: 12px;
+            font-size: 13px;
+            color: #28a745;
+            text-align: center;
+            background: #e8f5e9;
+            padding: 8px;
+            border-radius: 8px;
+            display: none;
+        }
+        .filter-buttons {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+        .filter-buttons .btn {
+            flex: 1;
+            min-width: 60px;
+            text-align: center;
+        }
+        .delete-selected-area {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-top: 10px;
+            padding: 10px;
+            background: #fff5f5;
+            border-radius: 10px;
+            border: 1px solid #f5c6cb;
+        }
+        .delete-checkbox {
+            margin-right: 8px;
+            transform: scale(1.2);
+        }
+        .loading {
+            text-align: center;
+            padding: 30px;
+            color: #888;
+        }
+        .balance-row {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-top: 4px;
+        }
+        .balance-item {
+            font-size: 14px;
+        }
+        .balance-item .label {
+            color: #888;
+            font-weight: normal;
+        }
+        .due-badge {
+            font-size: 12px;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-weight: bold;
+        }
+        .due-badge.due {
+            background: #dc3545;
+            color: white;
+        }
+        .due-badge.clear {
+            background: #28a745;
+            color: white;
+        }
+        .btn-edit {
+            background: #17a2b8;
+            color: white;
+        }
+        .btn-edit:hover {
+            background: #138496;
+        }
+        @media (max-width: 600px) {
+            .container {
+                padding: 14px;
+            }
+            .customer-actions input {
+                width: 70px;
+            }
+            .btn {
+                padding: 10px 14px;
+                font-size: 14px;
+            }
+            .stats {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>
+        💵 MONTY - RS HISAB
+        <small>v7.0</small>
+    </h1>
+
+    <div class="stats">
+        <div class="stat-box total">
+            <div class="number" id="totalRsDisplay">0</div>
+            <div class="label">💰 कुल बकाया</div>
+        </div>
+        <div class="stat-box ten">
+            <div class="number" id="total10Display">0</div>
+            <div class="label">🟧 10% वाले</div>
+        </div>
+        <div class="stat-box five">
+            <div class="number" id="total5Display">0</div>
+            <div class="label">🟩 5% वाले</div>
+        </div>
+    </div>
+
+    <div class="input-group">
+        <input type="text" id="customerNameInput" placeholder="नया कस्टमर का नाम..." />
+        <select id="customerTypeSelect">
+            <option value="10">10% वाला</option>
+            <option value="5">5% वाला</option>
+        </select>
+        <button class="btn btn-primary" onclick="addCustomer()">➕ जोड़ें</button>
+    </div>
+
+    <div class="filter-buttons">
+        <button class="btn btn-outline btn-sm" onclick="setFilter('all')" id="filterAll">📋 सभी</button>
+        <button class="btn btn-ten btn-sm" onclick="setFilter('10')" id="filter10">🟧 10%</button>
+        <button class="btn btn-five btn-sm" onclick="setFilter('5')" id="filter5">🟩 5%</button>
+        <button class="btn btn-danger btn-sm" onclick="setFilter('due')" id="filterDue">🔴 बकाया</button>
+        <button class="btn btn-success btn-sm" onclick="setFilter('clear')" id="filterClear">✅ Clear</button>
+    </div>
+
+    <div class="search-box">
+        <input type="text" id="searchInput" placeholder="🔍 कस्टमर खोजें..." oninput="renderCustomers()" />
+    </div>
+
+    <div class="delete-selected-area" id="deleteSelectedArea" style="display:none;">
+        <span style="font-weight:bold; color:#b02a37;">चयनित कस्टमर हटाएँ:</span>
+        <button class="btn btn-danger btn-sm" onclick="deleteSelectedCustomers()">🗑️ चयनित हटाएँ</button>
+        <button class="btn btn-outline btn-sm" onclick="clearSelections()">❌ चयन हटाएँ</button>
+    </div>
+
+    <div class="customer-list" id="customerList">
+        <div class="loading">⏳ डेटा लोड हो रहा है...</div>
+    </div>
+
+    <div class="status-bar" id="statusBar">✅ Data synced!</div>
+
+    <div class="backup-section">
+        <button class="btn btn-success btn-sm" onclick="exportBackup()">📥 Backup Download</button>
+        <button class="btn btn-warning btn-sm" onclick="document.getElementById('restoreInput').click()">📤 Restore Backup</button>
+        <input type="file" id="restoreInput" accept=".json" style="display:none" onchange="importBackup(event)" />
+        <button class="btn btn-danger btn-sm" onclick="if(confirm('सारा डेटा डिलीट हो जाएगा। क्या आप sure हैं?')) { deleteAllData(); }">🗑️ सारा डेटा हटाएँ</button>
+    </div>
+</div>
+
+<script>
+    // ========== SUPABASE SETUP ==========
+    const SUPABASE_URL = 'https://rpyymyiwjxnztzxqef.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJweW15bWl3ZWpueHR6eHFlZnZnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg1OTI3NzYsImV4cCI6MjEwNDE2ODc3Nn0.g5dDTzf-A-DJEVxwua9giVlPbIyqdhHENRrM-f04pdk';
+
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // ========== STATE ==========
+    let currentFilter = 'all';
+    let selectedIndices = new Set();
+    let customers = [];
+    let isLoading = true;
+
+    // ========== LOAD DATA ==========
+    async function loadCustomers() {
+        try {
+            isLoading = true;
+            const { data, error } = await supabase
+                .from('customers')
+                .select('*')
+                .order('created_at', { ascending: true });
+
+            if (error) throw error;
+
+            customers = data || [];
+            isLoading = false;
+            renderCustomers();
+            updateStats();
+            showStatus('✅ डेटा सिंक हो गया!', '#28a745');
+        } catch (error) {
+            console.error('Error loading data:', error);
+            isLoading = false;
+            showStatus('❌ डेटा लोड करने में error: ' + error.message, '#dc3545');
+            renderCustomers();
+        }
+    }
+
+    // ========== SHOW STATUS ==========
+    function showStatus(msg, color = '#28a745') {
+        const bar = document.getElementById('statusBar');
+        bar.textContent = msg;
+        bar.style.display = 'block';
+        bar.style.background = color === '#28a745' ? '#e8f5e9' : '#ffebee';
+        bar.style.color = color;
+        setTimeout(() => {
+            bar.style.display = 'none';
+        }, 3000);
+    }
+
+    // ========== UPDATE STATS ==========
+    function updateStats() {
+        const totalRs = customers.reduce((sum, c) => sum + (c.balance || 0), 0);
+        const total10 = customers.filter(c => c.type === '10').reduce((sum, c) => sum + (c.balance || 0), 0);
+        const total5 = customers.filter(c => c.type === '5').reduce((sum, c) => sum + (c.balance || 0), 0);
+
+        document.getElementById('totalRsDisplay').textContent = totalRs;
+        document.getElementById('total10Display').textContent = total10;
+        document.getElementById('total5Display').textContent = total5;
+    }
+
+    // ========== SET FILTER ==========
+    function setFilter(type) {
+        currentFilter = type;
+        document.querySelectorAll('.filter-buttons .btn').forEach(b => b.style.opacity = '0.6');
+        if (type === 'all') document.getElementById('filterAll').style.opacity = '1';
+        else if (type === '10') document.getElementById('filter10').style.opacity = '1';
+        else if (type === '5') document.getElementById('filter5').style.opacity = '1';
+        else if (type === 'due') document.getElementById('filterDue').style.opacity = '1';
+        else if (type === 'clear') document.getElementById('filterClear').style.opacity = '1';
+        renderCustomers();
+    }
+
+    // ========== MULTI-DELETE UI ==========
+    function updateDeleteAreaVisibility() {
+        const area = document.getElementById('deleteSelectedArea');
+        if (selectedIndices.size > 0) {
+            area.style.display = 'flex';
+        } else {
+            area.style.display = 'none';
+        }
+    }
+
+    function toggleSelection(idx) {
+        if (selectedIndices.has(idx)) {
+            selectedIndices.delete(idx);
+        } else {
+            selectedIndices.add(idx);
+        }
+        updateDeleteAreaVisibility();
+        renderCustomers();
+    }
+
+    function clearSelections() {
+        selectedIndices.clear();
+        updateDeleteAreaVisibility();
+        renderCustomers();
+    }
+
+    // ========== RENDER ==========
+    function renderCustomers() {
+        const list = document.getElementById('customerList');
+
+        if (isLoading) {
+            list.innerHTML = '<div class="loading">⏳ डेटा लोड हो रहा है...</div>';
+            return;
+        }
+
+        const search = document.getElementById('searchInput').value.toLowerCase().trim();
+
+        let filtered = customers;
+        if (currentFilter !== 'all') {
+            if (currentFilter === 'due') {
+                filtered = filtered.filter(c => (c.balance || 0) > 0);
+            } else if (currentFilter === 'clear') {
+                filtered = filtered.filter(c => (c.balance || 0) === 0);
+            } else {
+                filtered = filtered.filter(c => c.type === currentFilter);
+            }
+        }
+        if (search) {
+            filtered = filtered.filter(c => c.name.toLowerCase().includes(search));
+        }
+
+        if (filtered.length === 0) {
+            list.innerHTML = '<p style="color:#888; text-align:center; padding:30px;">कोई कस्टमर नहीं मिला या अभी कोई नहीं है।</p>';
+            updateStats();
+            return;
+        }
+
+        let html = '';
+        filtered.forEach((c) => {
+            const realIdx = customers.indexOf(c);
+            const balance = c.balance || 0;
+            const isChecked = selectedIndices.has(realIdx) ? 'checked' : '';
+            const history = c.history || [];
+            
+            let balanceClass = 'balance-zero';
+            let dueText = '✅ Clear';
+            let dueBadge = 'due-badge clear';
+            if (balance > 0) {
+                balanceClass = 'balance-negative';
+                dueText = `🔴 ${balance} बकाया`;
+                dueBadge = 'due-badge due';
+            } else if (balance < 0) {
+                balanceClass = 'balance-positive';
+                dueText = `🟢 ${Math.abs(balance)} अतिरिक्त`;
+                dueBadge = 'due-badge clear';
+            }
+            
+            const typeClass = c.type === '10' ? 'type-10' : 'type-5';
+            const badgeClass = c.type === '10' ? 'badge-10' : 'badge-5';
+            const typeLabel = c.type === '10' ? '🟧 10%' : '🟩 5%';
+
+            html += `
+                <div class="customer-card ${typeClass}" id="card_${realIdx}">
+                    <div class="customer-header">
+                        <span class="customer-name">
+                            <input type="checkbox" class="delete-checkbox" ${isChecked} onchange="toggleSelection(${realIdx})" />
+                            ${c.name} <span class="customer-badge ${badgeClass}">${typeLabel}</span>
+                            <span class="${dueBadge}">${dueText}</span>
+                        </span>
+                        <span class="customer-balance ${balanceClass}">₹${balance}</span>
+                    </div>
+
+                    <div class="customer-actions">
+                        <input type="number" id="amountInput_${realIdx}" placeholder="₹" min="1" />
+                        <button class="btn btn-danger btn-sm" onclick="addDue(${realIdx})">➕ बकाया +</button>
+                        <button class="btn btn-success btn-sm" onclick="payDue(${realIdx})">💵 भुगतान -</button>
+                        <button class="btn btn-edit btn-sm" onclick="editCustomer(${realIdx})">✏️</button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteCustomer(${realIdx})">🗑️</button>
+                    </div>
+
+                    <div class="history">
+                        ${history && history.length > 0 ? history.slice().reverse().map(h => `
+                            <div class="history-item">
+                                <span>${h.date || ''}</span>
+                                <span>
+                                    ${h.type === 'due_add' ? `<span class="rs-plus">+₹${h.amount}</span>` : ''}
+                                    ${h.type === 'due_pay' ? `<span class="rs-minus">-₹${h.amount}</span>` : ''}
+                                </span>
+                            </div>
+                        `).join('') : '<span style="color:#aaa;">अभी कोई history नहीं</span>'}
+                    </div>
+                </div>
+            `;
+        });
+
+        list.innerHTML = html;
+        updateStats();
+        updateDeleteAreaVisibility();
+    }
+
+    // ========== ADD CUSTOMER ==========
+    async function addCustomer() {
+        const input = document.getElementById('customerNameInput');
+        const name = input.value.trim();
+        if (!name) {
+            alert('कृपया नाम डालें!');
+            return;
+        }
+
+        const type = document.getElementById('customerTypeSelect').value;
+        
+        if (customers.some(c => c.name.toLowerCase() === name.toLowerCase())) {
+            alert('यह कस्टमर पहले से मौजूद है!');
+            return;
+        }
+
+        try {
+            const newCustomer = {
+                name: name,
+                type: type,
+                balance: 0,
+                history: []
+            };
+
+            const { data, error } = await supabase
+                .from('customers')
+                .insert([newCustomer])
+                .select();
+
+            if (error) throw error;
+
+            if (data && data.length > 0) {
+                customers.push(data[0]);
+                renderCustomers();
+                updateStats();
+                showStatus(`✅ नया कस्टमर जुड़ा: ${name} (${type}%)`);
+                input.value = '';
+            }
+        } catch (error) {
+            console.error('Error adding customer:', error);
+            showStatus('❌ कस्टमर जोड़ने में error: ' + error.message, '#dc3545');
+        }
+    }
+
+    // ========== EDIT CUSTOMER ==========
+    async function editCustomer(idx) {
+        const c = customers[idx];
+        const newName = prompt('कस्टमर का नाम बदलें:', c.name);
+        if (newName === null) return;
+        const trimmed = newName.trim();
+        if (!trimmed) {
+            alert('नाम खाली नहीं हो सकता!');
+            return;
+        }
+        if (customers.some((other, i) => i !== idx && other.name.toLowerCase() === trimmed.toLowerCase())) {
+            alert('यह नाम पहले से मौजूद है!');
+            return;
+        }
+        const newType = confirm('क्या आप टाइप बदलना चाहते हैं? (OK = 10%, Cancel = 5%)') ? '10' : '5';
+
+        try {
+            const { error } = await supabase
+                .from('customers')
+                .update({ name: trimmed, type: newType })
+                .eq('id', c.id);
+
+            if (error) throw error;
+
+            c.name = trimmed;
+            c.type = newType;
+            renderCustomers();
+            updateStats();
+            showStatus(`✏️ ${trimmed} अपडेट किया (${newType}%)`, '#17a2b8');
+        } catch (error) {
+            console.error('Error editing customer:', error);
+            showStatus('❌ एडिट करने में error: ' + error.message, '#dc3545');
+        }
+    }
+
+    // ========== ADD DUE (बकाया बढ़ाना) ==========
+    async function addDue(idx) {
+        const input = document.getElementById(`amountInput_${idx}`);
+        if (!input) return;
+        const amount = parseInt(input.value);
+        if (!amount || amount <= 0) {
+            alert('सही राशि डालें (1 से ज्यादा)');
+            return;
+        }
+
+        const c = customers[idx];
+        const newBalance = (c.balance || 0) + amount;
+        const history = c.history || [];
+        history.push({
+            type: 'due_add',
+            amount: amount,
+            date: new Date().toLocaleString()
+        });
+
+        try {
+            const { error } = await supabase
+                .from('customers')
+                .update({ balance: newBalance, history: history })
+                .eq('id', c.id);
+
+            if (error) throw error;
+
+            c.balance = newBalance;
+            c.history = history;
+            input.value = '';
+            renderCustomers();
+            updateStats();
+            showStatus(`✅ ₹${amount} बकाया बढ़ा (${c.name})`, '#dc3545');
+        } catch (error) {
+            console.error('Error adding due:', error);
+            showStatus('❌ बकाया बढ़ाने में error: ' + error.message, '#dc3545');
+        }
+    }
+
+    // ========== PAY DUE (बकाया चुकाना) ==========
+    async function payDue(idx) {
+        const input = document.getElementById(`amountInput_${idx}`);
+        if (!input) return;
+        const amount = parseInt(input.value);
+        if (!amount || amount <= 0) {
+            alert('सही राशि डालें (1 से ज्यादा)');
+            return;
+        }
+
+        const c = customers[idx];
+        if ((c.balance || 0) < amount) {
+            alert(`❌ ${c.name} पर केवल ₹${c.balance} बकाया है!`);
+            return;
+        }
+
+        const newBalance = (c.balance || 0) - amount;
+        const history = c.history || [];
+        history.push({
+            type: 'due_pay',
+            amount: amount,
+            date: new Date().toLocaleString()
+        });
+
+        try {
+            const { error } = await supabase
+                .from('customers')
+                .update({ balance: newBalance, history: history })
+                .eq('id', c.id);
+
+            if (error) throw error;
+
+            c.balance = newBalance;
+            c.history = history;
+            input.value = '';
+            renderCustomers();
+            updateStats();
+            showStatus(`✅ ₹${amount} भुगतान हो गया (${c.name})`, '#28a745');
+        } catch (error) {
+            console.error('Error paying due:', error);
+            showStatus('❌ भुगतान करने में error: ' + error.message, '#dc3545');
+        }
+    }
+
+    // ========== DELETE CUSTOMER ==========
+    async function deleteCustomer(idx) {
+        if (!confirm('क्या आप इस कस्टमर को हटाना चाहते हैं?')) return;
+        const c = customers[idx];
+
+        try {
+            const { error } = await supabase
+                .from('customers')
+                .delete()
+                .eq('id', c.id);
+
+            if (error) throw error;
+
+            customers.splice(idx, 1);
+            selectedIndices.clear();
+            renderCustomers();
+            updateStats();
+            showStatus(`🗑️ ${c.name} हटा दिया गया`, '#dc3545');
+        } catch (error) {
+            console.error('Error deleting customer:', error);
+            showStatus('❌ हटाने में error: ' + error.message, '#dc3545');
+        }
+    }
+
+    // ========== DELETE SELECTED ==========
+    async function deleteSelectedCustomers() {
+        if (selectedIndices.size === 0) return;
+        const count = selectedIndices.size;
+        if (!confirm(`क्या आप ${count} चयनित कस्टमर को हटाना चाहते हैं?`)) return;
+
+        const idsToDelete = [];
+        const sorted = Array.from(selectedIndices).sort((a, b) => b - a);
+        for (let idx of sorted) {
+            idsToDelete.push(customers[idx].id);
+        }
+
+        try {
+            const { error } = await supabase
+                .from('customers')
+                .delete()
+                .in('id', idsToDelete);
+
+            if (error) throw error;
+
+            for (let idx of sorted) {
+                customers.splice(idx, 1);
+            }
+            selectedIndices.clear();
+            renderCustomers();
+            updateStats();
+            showStatus(`🗑️ ${count} कस्टमर हटा दिए गए`, '#dc3545');
+        } catch (error) {
+            console.error('Error deleting selected customers:', error);
+            showStatus('❌ हटाने में error: ' + error.message, '#dc3545');
+        }
+    }
+
+    // ========== DELETE ALL ==========
+    async function deleteAllData() {
+        if (!confirm('सारा डेटा डिलीट हो जाएगा। क्या आप sure हैं?')) return;
+        
+        try {
+            const { error } = await supabase
+                .from('customers')
+                .delete()
+                .neq('id', 0);
+
+            if (error) throw error;
+
+            customers = [];
+            selectedIndices.clear();
+            renderCustomers();
+            updateStats();
+            showStatus('🗑️ सारा डेटा हटा दिया गया', '#dc3545');
+        } catch (error) {
+            console.error('Error deleting all data:', error);
+            showStatus('❌ डेटा हटाने में error: ' + error.message, '#dc3545');
+        }
+    }
+
+    // ========== EXPORT BACKUP ==========
+    function exportBackup() {
+        if (customers.length === 0) {
+            alert('कोई डेटा नहीं है!');
+            return;
+        }
+        const blob = new Blob([JSON.stringify(customers, null, 2)], { type: 'application/json' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `monty_backup_${new Date().toISOString().slice(0,10)}.json`;
+        a.click();
+        URL.revokeObjectURL(a.href);
+        showStatus('✅ Backup download हो गया!');
+    }
+
+    // ========== IMPORT BACKUP ==========
+    async function importBackup(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = async function(e) {
+            try {
+                const data = JSON.parse(e.target.result);
+                if (!Array.isArray(data)) throw new Error('Invalid format');
+                if (!confirm(`क्या आप ${data.length} कस्टमरों को restore करना चाहते हैं?`)) return;
+
+                await supabase.from('customers').delete().neq('id', 0);
+                
+                const { error } = await supabase
+                    .from('customers')
+                    .insert(data.map(d => ({
+                        name: d.name,
+                        type: d.type || '10',
+                        balance: d.balance || 0,
+                        history: d.history || []
+                    })));
+
+                if (error) throw error;
+
+                await loadCustomers();
+                showStatus(`✅ ${data.length} कस्टमर restore हो गए!`);
+            } catch (err) {
+                alert('❌ यह सही backup file नहीं है।');
+            }
+        };
+        reader.readAsText(file);
+        event.target.value = '';
+    }
+
+    // ========== INIT ==========
+    setFilter('all');
+    loadCustomers();
+
+    setInterval(() => {
+        if (!isLoading) {
+            loadCustomers();
+        }
+    }, 10000);
+</script>
+
+</body>
+</html>
+            
