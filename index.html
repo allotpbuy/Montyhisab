@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>MONTY</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <h1>💵 MONTY - RS HISAB</h1>
+    <div id="app">
+        <input type="text" id="name" placeholder="नाम..." />
+        <button onclick="add()">➕ जोड़ें</button>
+        <button onclick="load()">📋 Refresh</button>
+        <div id="list">⏳ लोड करें...</div>
+        <div id="status"></div>
+    </div>
+
+    <script>
+        const supabase = supabase.createClient(
+            'https://rpyymyiwjxnztzxqef.supabase.co',
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJweW15bWl3ZWpueHR6eHFlZnZnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg1OTI3NzYsImV4cCI6MjEwNDE2ODc3Nn0.g5dDTzf-A-DJEVxwua9giVlPbIyqdhHENRrM-f04pdk'
+        );
+
+        async function load() {
+            try {
+                document.getElementById('list').innerHTML = '⏳ लोड हो रहा...';
+                const { data, error } = await supabase.from('customers').select('*');
+                if (error) throw error;
+                if (data.length === 0) {
+                    document.getElementById('list').innerHTML = '❌ कोई कस्टमर नहीं';
+                } else {
+                    let html = '';
+                    data.forEach(c => {
+                        html += `<div style="border:1px solid #ddd;padding:8px;margin:4px 0;border-radius:6px;">${c.name} - ₹${c.balance || 0}</div>`;
+                    });
+                    document.getElementById('list').innerHTML = html;
+                }
+                document.getElementById('status').innerHTML = '✅ Loaded! Total: ' + data.length;
+            } catch (error) {
+                document.getElementById('list').innerHTML = '❌ Error: ' + error.message;
+                document.getElementById('status').innerHTML = '❌ Error: ' + error.message;
+            }
+        }
+
+        async function add() {
+            const name = document.getElementById('name').value.trim();
+            if (!name) { alert('Name dalo!'); return; }
+            
+            try {
+                const { data, error } = await supabase
+                    .from('customers')
+                    .insert([{ name: name, type: '10', balance: 0, history: [] }])
+                    .select();
+                if (error) throw error;
+                document.getElementById('status').innerHTML = '✅ Added: ' + name;
+                document.getElementById('name').value = '';
+                load();
+            } catch (error) {
+                document.getElementById('status').innerHTML = '❌ Error: ' + error.message;
+            }
+        }
+
+        // Auto load on start
+        load();
+    </script>
+</body>
+</html>
