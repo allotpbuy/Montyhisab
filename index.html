@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MONTY - RS HISAB</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <div style="max-width:600px;margin:auto;padding:20px;font-family:Arial;">
+        <h1>💵 MONTY - RS HISAB</h1>
+        
+        <div id="stats" style="display:flex;gap:10px;margin:10px 0;">
+            <div style="flex:1;background:#1e3a6b;color:white;padding:10px;border-radius:10px;text-align:center;">
+                <div id="totalRs">0</div>
+                <small>कुल बकाया</small>
+            </div>
+            <div style="flex:1;background:#e67e22;color:white;padding:10px;border-radius:10px;text-align:center;">
+                <div id="total10">0</div>
+                <small>10% वाले</small>
+            </div>
+            <div style="flex:1;background:#27ae60;color:white;padding:10px;border-radius:10px;text-align:center;">
+                <div id="total5">0</div>
+                <small>5% वाले</small>
+            </div>
+        </div>
+
+        <div style="display:flex;gap:10px;margin:10px 0;flex-wrap:wrap;">
+            <input type="text" id="nameInput" placeholder="नाम..." style="flex:1;padding:10px;border:2px solid #ddd;border-radius:8px;" />
+            <select id="typeSelect" style="padding:10px;border:2px solid #ddd;border-radius:8px;">
+                <option value="10">10%</option>
+                <option value="5">5%</option>
+            </select>
+            <button onclick="addCustomer()" style="padding:10px 20px;background:#1e3a6b;color:white;border:none;border-radius:8px;cursor:pointer;">➕ जोड़ें</button>
+        </div>
+
+        <div style="margin:10px 0;">
+            <input type="text" id="searchInput" placeholder="🔍 खोजें..." style="width:100%;padding:10px;border:2px solid #ddd;border-radius:8px;" oninput="renderCustomers()" />
+        </div>
+
+        <div id="customerList" style="margin:10px 0;"></div>
+
+        <div id="status" style="padding:10px;background:#e8f5e9;border-radius:8px;display:none;"></div>
+
+        <div style="margin-top:20px;display:flex;gap:10px;flex-wrap:wrap;">
+            <button onclick="exportBackup()" style="padding:8px 16px;background:#28a745;color:white;border:none;border-radius:8px;cursor:pointer;">📥 Backup</button>
+            <button onclick="document.getElementById('restoreInput').click()" style="padding:8px 16px;background:#ffc107;color:black;border:none;border-radius:8px;cursor:pointer;">📤 Restore</button>
+            <input type="file" id="restoreInput" accept=".json" style="display:none" onchange="importBackup(event)" />
+            <button onclick="if(confirm('सारा डेटा डिलीट हो जाएगा?')){deleteAll()}" style="padding:8px 16px;background:#dc3545;color:white;border:none;border-radius:8px;cursor:pointer;">🗑️ सारा हटाएँ</button>
+        </div>
+    </div>
+
+    <script>
+        // ========== SUPABASE ==========
+        const SUPABASE_URL = 'https://rpyymyiwjxnztzxqef.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJweW15bWl3ZWpueHR6eHFlZnZnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg1OTI3NzYsImV4cCI6MjEwNDE2ODc3Nn0.g5dDTzf-A-DJEVxwua9giVlPbIyqdhHENRrM-f04pdk';
+
+        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        let customers = [];
+
+        // ========== LOAD ==========
+        async function loadCustomers() {
+            try {
+                document.getElementById('customerList').innerHTML = '⏳ लोड हो रहा है...';
+                const { data, error } = await supabase.from('customers').select('*').order('created_at', { ascending: true });
+                
+                if (error) {
+                    document.getElementById('customerList').innerHTML = '❌ Error: ' + error.message;
+                    return;
+                }
+                
+                customers = data || [];
+                renderCustomers();
+                updateStats();
+                showStatus('✅ डेटा लोड हो गया!', '#28a745');
+            } catch (error) {
+                document.getElementById('customerList').innerHTML = '❌ Error: ' + error.message;
+            }
+        }
+
+        // ========== RENDER ==========
+        function renderCustomers() {
+            const search = document.getElementById('searchInput').value.toLowerCase().trim();
+            let filtered = customers;
+            if (search) {
+                filtered = filtered.filter(c => c.name.toLowerCase().includes(search));
+            }
+
+            if (filtered.length === 0) {
+                document.getElementById('customerList').innerHTML = '<p style="color:#888;">कोई कस्टमर नहीं</p>';
+                return;
+            }
+
+            let html = '';
+            filtered.forEach((c) => {
+                const balance = c.balance || 0;
+                const color = balance > 0 ? '#dc3545' : (balance < 0 ? '#28a745' : '#888');
+                const label = c.type === '10' ? '🟧 10%' : '🟩 5%';
+                
+                html += `
+                    <div style="background:#f8f9fc;border-radius:12px;padding:12px;margin-bottom:10px;border-left:4px solid ${c.type === '10' ? '#e67e22' : '#27ae60'};">
+                        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;">
+                            <span style="font-weight:bold;">${c.name} <span style="font-size:12px;background:#e67e22;color:white;padding:2px 8px;border-radius:12px;">${label}</span></span>
+                            <span style="font-weight:bold;color:${color};">₹${balance}</span>
+                        </div>
+                        <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;">
+                            <input type="number" id="amount_${c.id}" placeholder="₹" style="width:80px;padding:6px;border:2px solid #ddd;border-radius:6px;" />
+                            <button onclick="addDue(${c.id})" style="padding:6px 12px;background:#dc3545;color:white;border:none;border-radius:6px;cursor:pointer;">➕ बकाया</button>
+                            <button onclick="payDue(${c.id})" style="padding:6px 12px;background:#28a745;color:white;border:none;border-radius:6px;cursor:pointer;">💵 भुगतान</button>
+                            <button onclick="deleteCustomer(${c.id})" style="padding:6px 12px;background:#dc3545;color:white;border:none;border-radius:6px;cursor:pointer;">🗑️</button>
+                        </div>
+                        <div style="font-size:12px;color:#888;margin-top:6px;max-height:60px;overflow-y:auto;">
+                            ${(c.history || []).slice().reverse().slice(0,5).map(h => `
+                                <div style="display:flex;justify-content:space-between;border-bottom:1px dashed #eee;padding:2px 0;">
+                                    <span>${h.date || ''}</span>
+                                    <span style="${h.type === 'due_add' ? 'color:#dc3545;' : 'color:#28a745;'}">${h.type === 'due_add' ? '+' : '-'}₹${h.amount}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            });
+            document.getElementById('customerList').innerHTML = html;
+        }
+
+        // ========== UPDATE STATS ==========
+        function updateStats() {
+            const total = customers.reduce((s, c) => s + (c.balance || 0), 0);
+            const t10 = customers.filter(c => c.type === '10').reduce((s, c) => s + (c.balance || 0), 0);
+            const t5 = customers.filter(c => c.type === '5').reduce((s, c) => s + (c.balance || 0), 0);
+            document.getElementById('totalRs').textContent = total;
+            document.getElementById('total10').textContent = t10;
+            document.getElementById('total5').textContent = t5;
+        }
+
+        // ========== SHOW STATUS ==========
+        function showStatus(msg, color) {
+            const el = document.getElementById('status');
+            el.textContent = msg;
+            el.style.display = 'block';
+            el.style.background = color === '#28a745' ? '#e8f5e9' : '#ffebee';
+            el.style.color = color;
+            setTimeout(() => { el.style.display = 'none'; }, 3000);
+        }
+
+        // ========== ADD CUSTOMER ==========
+        async function addCustomer() {
+            const name = document.getElementById('nameInput').value.trim();
+            if (!name) { alert('नाम डालें!'); return; }
+            const type = document.getElementById('typeSelect').value;
+
+            try {
+                const { data, error } = await supabase
+                    .from('customers')
+                    .insert([{ name, type, balance: 0, history: [] }])
+                    .select();
+                if (error) { alert('Error: ' + error.message); return; }
+                if (data) {
+                    customers.push(data[0]);
+                    renderCustomers();
+                    updateStats();
+                    document.getElementById('nameInput').value = '';
+                    showStatus('✅ ' + name + ' जुड़ गया!', '#28a745');
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+
+        // ========== ADD DUE ==========
+        async function addDue(id) {
+            const input = document.getElementById('amount_' + id);
+            const amount = parseInt(input.value);
+            if (!amount || amount <= 0) { alert('सही राशि डालें!'); return; }
+
+            const c = customers.find(x => x.id === id);
+            if (!c) return;
+
+            const newBalance = (c.balance || 0) + amount;
+            const history = c.history || [];
+            history.push({ type: 'due_add', amount, date: new Date().toLocaleString() });
+
+            try {
+                const { error } = await supabase
+                    .from('customers')
+                    .update({ balance: newBalance, history })
+                    .eq('id', id);
+                if (error) { alert('Error: ' + error.message); return; }
+                c.balance = newBalance;
+                c.history = history;
+                input.value = '';
+                renderCustomers();
+                updateStats();
+                showStatus('✅ ₹' + amount + ' बकाया बढ़ा', '#dc3545');
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+
+        // ========== PAY DUE ==========
+        async function payDue(id) {
+            const input = document.getElementById('amount_' + id);
+            const amount = parseInt(input.value);
+            if (!amount || amount <= 0) { alert('सही राशि डालें!'); return; }
+
+            const c = customers.find(x => x.id === id);
+            if (!c) return;
+            if ((c.balance || 0) < amount) { alert('₹' + c.balance + ' से ज्यादा नहीं दे सकते!'); return; }
+
+            const newBalance = (c.balance || 0) - amount;
+            const history = c.history || [];
+            history.push({ type: 'due_pay', amount, date: new Date().toLocaleString() });
+
+            try {
+                const { error } = await supabase
+                    .from('customers')
+                    .update({ balance: newBalance, history })
+                    .eq('id', id);
+                if (error) { alert('Error: ' + error.message); return; }
+                c.balance = newBalance;
+                c.history = history;
+                input.value = '';
+                renderCustomers();
+                updateStats();
+                showStatus('✅ ₹' + amount + ' भुगतान हो गया', '#28a745');
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+
+        // ========== DELETE CUSTOMER ==========
+        async function deleteCustomer(id) {
+            if (!confirm('हटाना है?')) return;
+            try {
+                const { error } = await supabase.from('customers').delete().eq('id', id);
+                if (error) { alert('Error: ' + error.message); return; }
+                customers = customers.filter(c => c.id !== id);
+                renderCustomers();
+                updateStats();
+                showStatus('🗑️ हटा दिया गया', '#dc3545');
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+
+        // ========== DELETE ALL ==========
+        async function deleteAll() {
+            try {
+                await supabase.from('customers').delete().neq('id', 0);
+                customers = [];
+                renderCustomers();
+                updateStats();
+                showStatus('🗑️ सारा डेटा हटा दिया गया', '#dc3545');
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+
+        // ========== BACKUP ==========
+        function exportBackup() {
+            if (customers.length === 0) { alert('कोई डेटा नहीं!'); return; }
+            const blob = new Blob([JSON.stringify(customers, null, 2)], { type: 'application/json' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'monty_backup_' + new Date().toISOString().slice(0,10) + '.json';
+            a.click();
+        }
+
+        async function importBackup(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (!Array.isArray(data)) throw new Error('Invalid');
+                    if (!confirm(data.length + ' कस्टमर restore करें?')) return;
+                    await supabase.from('customers').delete().neq('id', 0);
+                    await supabase.from('customers').insert(data.map(d => ({
+                        name: d.name,
+                        type: d.type || '10',
+                        balance: d.balance || 0,
+                        history: d.history || []
+                    })));
+                    loadCustomers();
+                } catch (err) {
+                    alert('❌ सही file नहीं है');
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        }
+
+        // ========== START ==========
+        loadCustomers();
+        setInterval(loadCustomers, 15000);
+    </script>
+</body>
+</html>
