@@ -1,0 +1,212 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Monty - Group Hisab</title>
+<style>
+*{box-sizing:border-box}body{font-family:Arial;background:#f4f6f8;padding:10px;max-width:550px;margin:auto}
+.card{background:white;border-radius:12px;padding:15px;margin:10px 0;box-shadow:0 2px 8px #0002}
+input,button,select{width:100%;padding:12px;margin:5px 0;border-radius:8px;border:1px solid #ccc;font-size:16px}
+button{background:#1a73e8;color:white;font-weight:bold;border:0;cursor:pointer;border-radius:8px}
+.green{background:#34a853}.red{background:#ea4335}.orange{background:#f9a825;color:#000}.blue{background:#1a73e8}
+.customer{display:flex;justify-content:space-between;padding:12px;border-bottom:1px solid #eee;cursor:pointer}
+.pos{color:#34a853;font-weight:bold}.neg{color:#ea4335;font-weight:bold}
+.hidden{display:none}.total{font-size:36px;font-weight:bold;text-align:center}
+.entry{padding:8px;border-bottom:1px solid #eee;display:flex;justify-content:space-between;align-items:center}
+</style>
+</head>
+<body>
+
+<!-- ===== HOME ===== -->
+<div id="home">
+<div class="card" style="background:#111827;color:white;">
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;text-align:center;">
+<div>
+<div style="font-size:12px;color:#888;">🟢 10% Group</div>
+<div class="total" id="grand10" style="font-size:32px;color:#34a853;">0</div>
+</div>
+<div>
+<div style="font-size:12px;color:#888;">🟡 5% Group</div>
+<div class="total" id="grand5" style="font-size:32px;color:#f9a825;">0</div>
+</div>
+</div>
+<div style="font-size:11px;text-align:center;color:#888;margin-top:8px;">− = Customer ko dena hai | + = Customer ne diya</div>
+</div>
+
+<div class="card">
+<input id="newName" placeholder="Customer name">
+<select id="groupSelect">
+<option value="10">🟢 10% Group</option>
+<option value="5">🟡 5% Group</option>
+</select>
+<button onclick="addCustomer()">+ Customer Add</button>
+</div>
+
+<div class="card"><h3>📋 Customers</h3><div id="customers"></div></div>
+</div>
+
+<!-- ===== DETAIL ===== -->
+<div id="detail" class="hidden">
+<button onclick="goHome()">← Back</button>
+
+<div class="card" style="background:#111827;color:white;">
+<h2 id="cname" style="margin:0;"></h2>
+<div class="total" id="balance">0</div>
+<div style="font-size:12px;text-align:center;color:#888;">Group: <span id="groupDisplay">10%</span></div>
+<div style="font-size:11px;text-align:center;color:#888;">− = Aapko dena hai | + = Customer aapko dega</div>
+</div>
+
+<!-- ===== GAME Rs (−) ===== -->
+<div class="card" style="border-left:4px solid #ea4335;">
+<h4>🎮 Game Rs (Customer ke total balance mein MINUS)</h4>
+<input id="gameAmount" placeholder="Game amount">
+<button class="red" onclick="addGame()">🎮 Game Rs (−)</button>
+</div>
+
+<!-- ===== WIN Rs (+) ===== -->
+<div class="card" style="border-left:4px solid #34a853;">
+<h4>🏆 Win Rs (Customer ke total balance mein PLUS)</h4>
+<input id="winAmount" placeholder="Win amount">
+<button class="green" onclick="addWin()">🏆 Win Rs (+)</button>
+</div>
+
+<!-- ===== RECEIVED Rs (+) ===== -->
+<div class="card" style="border-left:4px solid #f9a825;">
+<h4>💰 Received Rs (Customer ke total balance mein PLUS)</h4>
+<input id="receivedAmount" placeholder="Received amount">
+<button class="orange" onclick="addReceived()" style="background:#f9a825;color:#000;">💰 Received Rs (+)</button>
+</div>
+
+<!-- ===== SEND Rs (−) ===== -->
+<div class="card" style="border-left:4px solid #1a73e8;">
+<h4>📤 Send Rs (Customer ke total balance mein MINUS)</h4>
+<input id="sendAmount" placeholder="Send amount">
+<button class="blue" onclick="addSend()">📤 Send Rs (−)</button>
+</div>
+
+<!-- ===== DELETE ===== -->
+<div class="card" style="border-left:4px solid #ea4335;">
+<button class="red" onclick="deleteCustomer()" style="background:#ea4335;">🗑️ Delete This Customer</button>
+</div>
+
+<div class="card"><h3>📜 History</h3><div id="history"></div></div>
+</div>
+
+<script>
+let data = JSON.parse(localStorage.getItem('montyData') || '{}');
+let current = null;
+
+function save() { localStorage.setItem('montyData', JSON.stringify(data)); render(); }
+
+function addCustomer() {
+  let n = document.getElementById('newName').value.trim();
+  let group = parseInt(document.getElementById('groupSelect').value);
+  if(!n) return alert('Naam likho!');
+  let id = n + '_' + group;
+  if(data[id]) return alert('Already exists in this group!');
+  data[id] = { name: n, group: group, tx: [] };
+  document.getElementById('newName').value = '';
+  save();
+}
+
+function render() {
+  let box = document.getElementById('customers'); box.innerHTML = '';
+  let total10 = 0, total5 = 0;
+  for(let id in data) {
+    let s = data[id].tx.reduce((a,x) => a + x.v, 0);
+    if(data[id].group === 10) total10 += s;
+    if(data[id].group === 5) total5 += s;
+    let groupLabel = data[id].group === 10 ? '🟢 10%' : '🟡 5%';
+    box.innerHTML += `<div class="customer" onclick="openCustomer('${id}')">
+      <span><b>${data[id].name}</b> <span style="font-size:12px;color:#888;">${groupLabel}</span></span>
+      <span class="${s>=0?'pos':'neg'}">${s>=0?'+':''}${s}</span>
+    </div>`;
+  }
+  document.getElementById('grand10').textContent = (total10>=0?'+':'') + total10;
+  document.getElementById('grand5').textContent = (total5>=0?'+':'') + total5;
+}
+
+function openCustomer(id) {
+  current = id;
+  document.getElementById('home').classList.add('hidden');
+  document.getElementById('detail').classList.remove('hidden');
+  document.getElementById('cname').textContent = data[id].name + ' (' + data[id].group + '%)';
+  document.getElementById('groupDisplay').textContent = data[id].group + '%';
+  drawDetail();
+}
+
+function goHome() {
+  document.getElementById('detail').classList.add('hidden');
+  document.getElementById('home').classList.remove('hidden');
+  render();
+}
+
+function deleteCustomer() {
+  if(!current) return;
+  if(!confirm('Delete this customer?')) return;
+  delete data[current];
+  current = null;
+  save(); goHome();
+}
+
+// ===== GAME → MINUS (−) =====
+function addGame() {
+  let a = parseInt(document.getElementById('gameAmount').value);
+  if(!a || a<1) return alert('Amount daalo!');
+  data[current].tx.unshift({ v: -a, t: new Date().toLocaleString(), type: `🎮 Game Rs ${a}` });
+  document.getElementById('gameAmount').value = '';
+  save(); drawDetail();
+}
+
+// ===== WIN → PLUS (+) =====
+function addWin() {
+  let a = parseInt(document.getElementById('winAmount').value);
+  if(!a || a<1) return alert('Amount daalo!');
+  data[current].tx.unshift({ v: a, t: new Date().toLocaleString(), type: `🏆 Win Rs ${a}` });
+  document.getElementById('winAmount').value = '';
+  save(); drawDetail();
+}
+
+// ===== RECEIVED → PLUS (+) =====
+function addReceived() {
+  let a = parseInt(document.getElementById('receivedAmount').value);
+  if(!a || a<1) return alert('Amount daalo!');
+  data[current].tx.unshift({ v: a, t: new Date().toLocaleString(), type: `💰 Received Rs ${a}` });
+  document.getElementById('receivedAmount').value = '';
+  save(); drawDetail();
+}
+
+// ===== SEND → MINUS (−) =====
+function addSend() {
+  let a = parseInt(document.getElementById('sendAmount').value);
+  if(!a || a<1) return alert('Amount daalo!');
+  data[current].tx.unshift({ v: -a, t: new Date().toLocaleString(), type: `📤 Send Rs ${a}` });
+  document.getElementById('sendAmount').value = '';
+  save(); drawDetail();
+}
+
+function drawDetail() {
+  let s = data[current].tx.reduce((a,x) => a + x.v, 0);
+  document.getElementById('balance').textContent = (s>=0?'+':'') + s;
+  let h = document.getElementById('history'); h.innerHTML = '';
+  data[current].tx.forEach((x,i) => {
+    let cls = x.v >= 0 ? 'pos' : 'neg';
+    let sign = x.v >= 0 ? '+' : '';
+    h.innerHTML += `<div class="entry">
+      <span><b>${x.type}</b><br><span style="font-size:11px;color:#666;">${x.t}</span></span>
+      <span class="${cls}">${sign}${x.v} <button onclick="delTx(${i})" style="width:auto;padding:2px 8px;background:#ddd;border:0;border-radius:4px;cursor:pointer;">×</button></span>
+    </div>`;
+  });
+}
+
+function delTx(i) {
+  if(confirm('Delete entry?')) {
+    data[current].tx.splice(i, 1);
+    save(); drawDetail();
+  }
+}
+
+render();
+</script>
+</body></html>
